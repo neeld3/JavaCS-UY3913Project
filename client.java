@@ -90,11 +90,11 @@ public class client{
                 if (username.isEmpty() || password.isEmpty()) {
                     return;
                 }
-                sout.println("LOGIN" + username + " " + password);
+                sout.println("LOGIN " + username + " " + password);
                 if (sin.hasNextLine()) {
                     String response = sin.nextLine();
                     if (response.equals("SUCCESS")) {
-                        //GO NEXT PAGE
+                        System.out.println("success");
                     }
                 }
             }
@@ -107,11 +107,11 @@ public class client{
                 if (username.isEmpty() || password.isEmpty()) {
                     return;
                 }
-                sout.println("CREATE" + username + " " + password);
+                sout.println("CREATE " + username + " " + password);
                 if (sin.hasNextLine()) {
                     String response = sin.nextLine();
                     if (response.equals("SUCCESS")) {
-                        //GO NEXT PAGE
+                        System.out.println("success");
                     }
                 }
             }
