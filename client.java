@@ -34,21 +34,17 @@ public class client{
         jf.add(login);
         jf.setVisible(true);   
     }
+
     static void loggingin(){
         login = new JPanel(new BorderLayout());
-        JTextPane infoBox = new JTextPane();
+        JTextArea infoBox = new JTextArea();
         infoBox.setText(" Welcome to Java Bank\n\nLog in or create an account:");
-
-        StyledDocument doc = infoBox.getStyledDocument();
-        SimpleAttributeSet center = new SimpleAttributeSet();
-        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
-        doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
         infoBox.setEditable(false);
         infoBox.setFont(new Font("SansSerif", Font.BOLD, 20));
         infoBox.setBackground(new Color(238, 238, 238)); 
 
-        login.add(infoBox, BorderLayout.NORTH);
+        login.add(login, BorderLayout.NORTH);
         infoBox.setEditable(false);
         
         JPanel userRow = new JPanel(new BorderLayout());
@@ -200,7 +196,7 @@ public class client{
                     String response = sin.nextLine();
                     if (response.equals("SUCCESS")) {
                         JOptionPane.showMessageDialog(jf, "Deposit successful!");
-                        accountPage(); // Refresh the account screen
+                        accountPage();
                     } else {
                         JOptionPane.showMessageDialog(jf, "Deposit failed.");
                     }
@@ -208,6 +204,7 @@ public class client{
             }
         }
     }
+
     static void withdraw() { // ChatGPT
         JPanel depositPanel = new JPanel();
         depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
@@ -244,7 +241,7 @@ public class client{
                     String response = sin.nextLine();
                     if (response.equals("SUCCESS")) {
                         JOptionPane.showMessageDialog(jf, "WITHDRAW successful!");
-                        accountPage(); // Refresh the account screen
+                        accountPage(); 
                     } else {
                         JOptionPane.showMessageDialog(jf, "WITHDRAW failed.");
                     }
