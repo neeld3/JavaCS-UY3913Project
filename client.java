@@ -244,6 +244,7 @@ public class client{
                 JPanel sendPanel = new JPanel();
                 sendPanel.setLayout(new BoxLayout(sendPanel, BoxLayout.Y_AXIS));
                 MyPanel jp = new MyPanel();
+                jp.setLayout(new BorderLayout());
                 jp.addMouseListener(new MouseListener(){
                     public void mouseClicked(MouseEvent e) {
                         jp.addPoint(e.getX(), e.getY());
@@ -268,7 +269,8 @@ public class client{
                         jp.clear();
                     }
                 });
-
+                jp.add(clear, BorderLayout.SOUTH);
+                jp.add(new JLabel("Add Signature Below: "), BorderLayout.NORTH);
                 // From Account ID
                 JPanel fromRow = new JPanel(new BorderLayout());
                 JLabel fromLabel = new JLabel("Your Account ID:");
@@ -305,9 +307,7 @@ public class client{
                 sendPanel.add(userRow);
                 sendPanel.add(toRow);
                 sendPanel.add(amountRow);
-                sendPanel.add(new JLabel("Add Signature Below"));
                 sendPanel.add(jp);
-                sendPanel.add(clear);
             
                 int result = JOptionPane.showConfirmDialog(jf, sendPanel, 
                     "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
