@@ -44,7 +44,7 @@ public class client{
         infoBox.setFont(new Font("SansSerif", Font.BOLD, 20));
         infoBox.setBackground(new Color(238, 238, 238)); 
 
-        login.add(login, BorderLayout.NORTH);
+        login.add(infoBox, BorderLayout.NORTH);
         infoBox.setEditable(false);
         
         JPanel userRow = new JPanel(new BorderLayout());
@@ -145,9 +145,170 @@ public class client{
         JButton withdraw = new JButton("Withdraw Money");
         JButton send = new JButton("Send Money");
         JButton transactions = new JButton("View Transactions");
-        deposit.addActionListener(e -> deposit()); // ChatGPT
-        withdraw.addActionListener(e -> withdraw());
-        send.addActionListener(e -> send());
+        deposit.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                JPanel depositPanel = new JPanel();
+                depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
+            
+                // Account ID
+                JPanel accRow = new JPanel(new BorderLayout());
+                JLabel accLabel = new JLabel("Account ID:");
+                JTextField accField = new JTextField();
+                accRow.add(accLabel, BorderLayout.WEST);
+                accRow.add(accField, BorderLayout.CENTER);
+                accRow.setMaximumSize(new Dimension(300, 40));
+            
+                // Amount
+                JPanel amountRow = new JPanel(new BorderLayout());
+                JLabel amountLabel = new JLabel("Amount:");
+                JTextField amountField = new JTextField();
+                amountRow.add(amountLabel, BorderLayout.WEST);
+                amountRow.add(amountField, BorderLayout.CENTER);
+                amountRow.setMaximumSize(new Dimension(300, 40));
+            
+                depositPanel.add(accRow);
+                depositPanel.add(amountRow);
+            
+                int result = JOptionPane.showConfirmDialog(jf, depositPanel, 
+                    "Deposit Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            
+                if (result == JOptionPane.OK_OPTION) {
+                    String accId = accField.getText();
+                    String amount = amountField.getText();
+            
+                    if (!accId.isEmpty() && !amount.isEmpty()) {
+                        sout.println("DEPOSIT " + accId + " " + amount);
+                        if (sin.hasNextLine()) {
+                            String response = sin.nextLine();
+                            if (response.equals("SUCCESS")) {
+                                JOptionPane.showMessageDialog(jf, "Deposit successful!");
+                                accountPage();
+                            } else {
+                                JOptionPane.showMessageDialog(jf, "Deposit failed.");
+                                accountPage();
+                            }
+                        }
+                    }
+                }
+            }
+        }); 
+        withdraw.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                JPanel depositPanel = new JPanel();
+                depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
+            
+                // Account ID
+                JPanel accRow = new JPanel(new BorderLayout());
+                JLabel accLabel = new JLabel("Account ID:");
+                JTextField accField = new JTextField();
+                accRow.add(accLabel, BorderLayout.WEST);
+                accRow.add(accField, BorderLayout.CENTER);
+                accRow.setMaximumSize(new Dimension(300, 40));
+            
+                // Amount
+                JPanel amountRow = new JPanel(new BorderLayout());
+                JLabel amountLabel = new JLabel("Amount:");
+                JTextField amountField = new JTextField();
+                amountRow.add(amountLabel, BorderLayout.WEST);
+                amountRow.add(amountField, BorderLayout.CENTER);
+                amountRow.setMaximumSize(new Dimension(300, 40));
+            
+                depositPanel.add(accRow);
+                depositPanel.add(amountRow);
+            
+                int result = JOptionPane.showConfirmDialog(jf, depositPanel, 
+                    "Withdraw Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            
+                if (result == JOptionPane.OK_OPTION) {
+                    String accId = accField.getText();
+                    String amount = amountField.getText();
+            
+                    if (!accId.isEmpty() && !amount.isEmpty()) {
+                        sout.println("WITHDRAW " + accId + " " + amount);
+                        if (sin.hasNextLine()) {
+                            String response = sin.nextLine();
+                            if (response.equals("SUCCESS")) {
+                                JOptionPane.showMessageDialog(jf, "WITHDRAW successful!");
+                                accountPage(); 
+                            } else {
+                                JOptionPane.showMessageDialog(jf, "WITHDRAW failed.");
+                                accountPage();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        send.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                JPanel sendPanel = new JPanel();
+                sendPanel.setLayout(new BoxLayout(sendPanel, BoxLayout.Y_AXIS));
+            
+                // From Account ID
+                JPanel fromRow = new JPanel(new BorderLayout());
+                JLabel fromLabel = new JLabel("Your Account ID:");
+                JTextField fromField = new JTextField();
+                fromRow.add(fromLabel, BorderLayout.WEST);
+                fromRow.add(fromField, BorderLayout.CENTER);
+                fromRow.setMaximumSize(new Dimension(300, 40));
+            
+                // Recipient User ID
+                JPanel userRow = new JPanel(new BorderLayout());
+                JLabel userLabel = new JLabel("Recipient User ID:");
+                JTextField userField = new JTextField();
+                userRow.add(userLabel, BorderLayout.WEST);
+                userRow.add(userField, BorderLayout.CENTER);
+                userRow.setMaximumSize(new Dimension(300, 40));
+            
+                // Recipient Account ID
+                JPanel toRow = new JPanel(new BorderLayout());
+                JLabel toLabel = new JLabel("Recipient Account ID:");
+                JTextField toField = new JTextField();
+                toRow.add(toLabel, BorderLayout.WEST);
+                toRow.add(toField, BorderLayout.CENTER);
+                toRow.setMaximumSize(new Dimension(300, 40));
+            
+                // Amount
+                JPanel amountRow = new JPanel(new BorderLayout());
+                JLabel amountLabel = new JLabel("Amount:");
+                JTextField amountField = new JTextField();
+                amountRow.add(amountLabel, BorderLayout.WEST);
+                amountRow.add(amountField, BorderLayout.CENTER);
+                amountRow.setMaximumSize(new Dimension(300, 40));
+            
+                sendPanel.add(fromRow);
+                sendPanel.add(userRow);
+                sendPanel.add(toRow);
+                sendPanel.add(amountRow);
+            
+                int result = JOptionPane.showConfirmDialog(jf, sendPanel, 
+                    "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            
+                if (result == JOptionPane.OK_OPTION) {
+                    String fromAcc = fromField.getText();
+                    String userId = userField.getText();
+                    String toAcc = toField.getText();
+                    String amount = amountField.getText();
+            
+                    if (!fromAcc.isEmpty() && !userId.isEmpty() && !toAcc.isEmpty() && !amount.isEmpty()) {
+                        sout.println("SEND " + fromAcc + " " + userId + " " + toAcc + " " + amount);
+                        if (sin.hasNextLine()) {
+                            System.out.println("Here after if next line");
+                            String response = sin.nextLine();
+                            if (response.equals("SUCCESS")) {
+                                System.out.println("Here after success");
+                                JOptionPane.showMessageDialog(jf, "Transfer successful!");
+                                accountPage(); // Refresh screen
+                            } else {
+                                System.out.println("Here in else after success");
+                                JOptionPane.showMessageDialog(jf, "Transfer failed.");
+                                accountPage();
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         buttons.add(deposit);
         buttons.add(withdraw);
@@ -158,164 +319,6 @@ public class client{
         jf.add(account_info);
         jf.revalidate();
         jf.repaint();
-    }
-
-    static void deposit() { // ChatGPT
-        JPanel depositPanel = new JPanel();
-        depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
-    
-        // Account ID
-        JPanel accRow = new JPanel(new BorderLayout());
-        JLabel accLabel = new JLabel("Account ID:");
-        JTextField accField = new JTextField();
-        accRow.add(accLabel, BorderLayout.WEST);
-        accRow.add(accField, BorderLayout.CENTER);
-        accRow.setMaximumSize(new Dimension(300, 40));
-    
-        // Amount
-        JPanel amountRow = new JPanel(new BorderLayout());
-        JLabel amountLabel = new JLabel("Amount:");
-        JTextField amountField = new JTextField();
-        amountRow.add(amountLabel, BorderLayout.WEST);
-        amountRow.add(amountField, BorderLayout.CENTER);
-        amountRow.setMaximumSize(new Dimension(300, 40));
-    
-        depositPanel.add(accRow);
-        depositPanel.add(amountRow);
-    
-        int result = JOptionPane.showConfirmDialog(jf, depositPanel, 
-            "Deposit Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    
-        if (result == JOptionPane.OK_OPTION) {
-            String accId = accField.getText();
-            String amount = amountField.getText();
-    
-            if (!accId.isEmpty() && !amount.isEmpty()) {
-                sout.println("DEPOSIT " + accId + " " + amount);
-                if (sin.hasNextLine()) {
-                    String response = sin.nextLine();
-                    if (response.equals("SUCCESS")) {
-                        JOptionPane.showMessageDialog(jf, "Deposit successful!");
-                        accountPage();
-                    } else {
-                        JOptionPane.showMessageDialog(jf, "Deposit failed.");
-                    }
-                }
-            }
-        }
-    }
-
-    static void withdraw() { // ChatGPT
-        JPanel depositPanel = new JPanel();
-        depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
-    
-        // Account ID
-        JPanel accRow = new JPanel(new BorderLayout());
-        JLabel accLabel = new JLabel("Account ID:");
-        JTextField accField = new JTextField();
-        accRow.add(accLabel, BorderLayout.WEST);
-        accRow.add(accField, BorderLayout.CENTER);
-        accRow.setMaximumSize(new Dimension(300, 40));
-    
-        // Amount
-        JPanel amountRow = new JPanel(new BorderLayout());
-        JLabel amountLabel = new JLabel("Amount:");
-        JTextField amountField = new JTextField();
-        amountRow.add(amountLabel, BorderLayout.WEST);
-        amountRow.add(amountField, BorderLayout.CENTER);
-        amountRow.setMaximumSize(new Dimension(300, 40));
-    
-        depositPanel.add(accRow);
-        depositPanel.add(amountRow);
-    
-        int result = JOptionPane.showConfirmDialog(jf, depositPanel, 
-            "Withdraw Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    
-        if (result == JOptionPane.OK_OPTION) {
-            String accId = accField.getText();
-            String amount = amountField.getText();
-    
-            if (!accId.isEmpty() && !amount.isEmpty()) {
-                sout.println("WITHDRAW " + accId + " " + amount);
-                if (sin.hasNextLine()) {
-                    String response = sin.nextLine();
-                    if (response.equals("SUCCESS")) {
-                        JOptionPane.showMessageDialog(jf, "WITHDRAW successful!");
-                        accountPage(); 
-                    } else {
-                        JOptionPane.showMessageDialog(jf, "WITHDRAW failed.");
-                    }
-                }
-            }
-        }
-    }
-
-    static void send() {
-        JPanel sendPanel = new JPanel();
-        sendPanel.setLayout(new BoxLayout(sendPanel, BoxLayout.Y_AXIS));
-    
-        // From Account ID
-        JPanel fromRow = new JPanel(new BorderLayout());
-        JLabel fromLabel = new JLabel("Your Account ID:");
-        JTextField fromField = new JTextField();
-        fromRow.add(fromLabel, BorderLayout.WEST);
-        fromRow.add(fromField, BorderLayout.CENTER);
-        fromRow.setMaximumSize(new Dimension(300, 40));
-    
-        // Recipient User ID
-        JPanel userRow = new JPanel(new BorderLayout());
-        JLabel userLabel = new JLabel("Recipient User ID:");
-        JTextField userField = new JTextField();
-        userRow.add(userLabel, BorderLayout.WEST);
-        userRow.add(userField, BorderLayout.CENTER);
-        userRow.setMaximumSize(new Dimension(300, 40));
-    
-        // Recipient Account ID
-        JPanel toRow = new JPanel(new BorderLayout());
-        JLabel toLabel = new JLabel("Recipient Account ID:");
-        JTextField toField = new JTextField();
-        toRow.add(toLabel, BorderLayout.WEST);
-        toRow.add(toField, BorderLayout.CENTER);
-        toRow.setMaximumSize(new Dimension(300, 40));
-    
-        // Amount
-        JPanel amountRow = new JPanel(new BorderLayout());
-        JLabel amountLabel = new JLabel("Amount:");
-        JTextField amountField = new JTextField();
-        amountRow.add(amountLabel, BorderLayout.WEST);
-        amountRow.add(amountField, BorderLayout.CENTER);
-        amountRow.setMaximumSize(new Dimension(300, 40));
-    
-        sendPanel.add(fromRow);
-        sendPanel.add(userRow);
-        sendPanel.add(toRow);
-        sendPanel.add(amountRow);
-    
-        int result = JOptionPane.showConfirmDialog(jf, sendPanel, 
-            "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    
-        if (result == JOptionPane.OK_OPTION) {
-            String fromAcc = fromField.getText();
-            String userId = userField.getText();
-            String toAcc = toField.getText();
-            String amount = amountField.getText();
-    
-            if (!fromAcc.isEmpty() && !userId.isEmpty() && !toAcc.isEmpty() && !amount.isEmpty()) {
-                sout.println("SEND " + fromAcc + " " + userId + " " + toAcc + " " + amount);
-                if (sin.hasNextLine()) {
-                    System.out.println("Here after if next line");
-                    String response = sin.nextLine();
-                    if (response.equals("SUCCESS")) {
-                        System.out.println("Here after success");
-                        JOptionPane.showMessageDialog(jf, "Transfer successful!");
-                        accountPage(); // Refresh screen
-                    } else {
-                        System.out.println("Here in else after success");
-                        JOptionPane.showMessageDialog(jf, "Transfer failed.");
-                    }
-                }
-            }
-        }
     }
 }
 
