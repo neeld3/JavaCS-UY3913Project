@@ -145,12 +145,12 @@ public class client{
         JButton withdraw = new JButton("Withdraw Money");
         JButton send = new JButton("Send Money");
         JButton transactions = new JButton("View Transactions");
+        transactions.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){transactionLog();}});
         deposit.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 JPanel depositPanel = new JPanel();
                 depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
             
-                // Account ID
                 JPanel accRow = new JPanel(new BorderLayout());
                 JLabel accLabel = new JLabel("Account ID:");
                 JTextField accField = new JTextField();
@@ -158,7 +158,6 @@ public class client{
                 accRow.add(accField, BorderLayout.CENTER);
                 accRow.setMaximumSize(new Dimension(300, 40));
             
-                // Amount
                 JPanel amountRow = new JPanel(new BorderLayout());
                 JLabel amountLabel = new JLabel("Amount:");
                 JTextField amountField = new JTextField();
@@ -192,12 +191,12 @@ public class client{
                 }
             }
         }); 
+
         withdraw.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 JPanel depositPanel = new JPanel();
                 depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
             
-                // Account ID
                 JPanel accRow = new JPanel(new BorderLayout());
                 JLabel accLabel = new JLabel("Account ID:");
                 JTextField accField = new JTextField();
@@ -239,11 +238,37 @@ public class client{
                 }
             }
         });
+
         send.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 JPanel sendPanel = new JPanel();
                 sendPanel.setLayout(new BoxLayout(sendPanel, BoxLayout.Y_AXIS));
-            
+                MyPanel jp = new MyPanel();
+                jp.addMouseListener(new MouseListener(){
+                    public void mouseClicked(MouseEvent e) {
+                        jp.addPoint(e.getX(), e.getY());
+                        jp.repaint();
+                    }
+                    public void mousePressed(MouseEvent e) {}
+                    public void mouseReleased(MouseEvent e) {}
+                    public void mouseEntered(MouseEvent e) {}
+                    public void mouseExited(MouseEvent e) {}
+                });
+                jp.addMouseMotionListener(new MouseMotionListener(){
+                    public void mouseDragged(MouseEvent e) {                
+                        jp.addPoint(e.getX(), e.getY());
+                        jp.repaint();
+                    }
+                    public void mouseMoved(MouseEvent e) {}
+                });
+                jp.setPreferredSize(new Dimension(300, 120));
+                JButton clear = new JButton("Clear");
+                clear.addActionListener(new ActionListener(){
+                    public void actionPerformed(ActionEvent e){
+                        jp.clear();
+                    }
+                });
+
                 // From Account ID
                 JPanel fromRow = new JPanel(new BorderLayout());
                 JLabel fromLabel = new JLabel("Your Account ID:");
@@ -280,11 +305,18 @@ public class client{
                 sendPanel.add(userRow);
                 sendPanel.add(toRow);
                 sendPanel.add(amountRow);
+                sendPanel.add(new JLabel("Add Signature Below"));
+                sendPanel.add(jp);
+                sendPanel.add(clear);
             
                 int result = JOptionPane.showConfirmDialog(jf, sendPanel, 
                     "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
             
                 if (result == JOptionPane.OK_OPTION) {
+                    if (!jp.hasSignature()) {
+                        JOptionPane.showMessageDialog(jf, "Please draw your signature before sending.");
+                        return;
+                    }
                     String fromAcc = fromField.getText();
                     String userId = userField.getText();
                     String toAcc = toField.getText();
@@ -320,5 +352,47 @@ public class client{
         jf.revalidate();
         jf.repaint();
     }
+
+    static void transactionLog(){
+        jf.getContentPane().removeAll();
+
+        JPanel transactions = new JPanel(new BorderLayout());
+        JButton toFile = new JButton("To File");
+        transactions.add(toFile, BorderLayout.SOUTH);
+        JTextArea list = new JTextArea();
+        
+
+    }
 }
 
+class MyPanel extends JPanel{
+    class Point{
+        int x;
+        int y;
+        Point(int newx, int newy){x = newx; y = newy;}
+    }
+    ArrayList<Point> al;
+    MyPanel(){
+        super();
+        al = new ArrayList();
+    }
+    public void addPoint(int x, int y){
+        al.add(new Point(x,y));
+    }
+    protected void paintComponent(Graphics g){
+        super.paintComponent(g);
+        int width = getWidth();
+        int height = getHeight();
+        g.setColor(Color.BLACK);
+        for (Point p: al){
+            g.fillOval(p.x-2, p.y-2, 4, 4);
+        }
+    }
+    public boolean hasSignature() {
+        return al.size() > 0;
+    }
+    public void clear(){
+        al.clear();
+        repaint();
+    }
+}
