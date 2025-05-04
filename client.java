@@ -203,11 +203,13 @@ public class client{
                         accountPage(); // Refresh the account screen
                     } else {
                         JOptionPane.showMessageDialog(jf, "Deposit failed.");
+                        accountPage();
                     }
                 }
             }
         }
     }
+    
     static void withdraw() { // ChatGPT
         JPanel depositPanel = new JPanel();
         depositPanel.setLayout(new BoxLayout(depositPanel, BoxLayout.Y_AXIS));
@@ -247,6 +249,7 @@ public class client{
                         accountPage(); // Refresh the account screen
                     } else {
                         JOptionPane.showMessageDialog(jf, "WITHDRAW failed.");
+                        accountPage();
                     }
                 }
             }
@@ -315,6 +318,7 @@ public class client{
                     } else {
                         System.out.println("Here in else after success");
                         JOptionPane.showMessageDialog(jf, "Transfer failed.");
+                        accountPage();
                     }
                 }
             }
