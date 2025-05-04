@@ -37,8 +37,14 @@ public class client{
 
     static void loggingin(){
         login = new JPanel(new BorderLayout());
-        JTextArea infoBox = new JTextArea();
+        JTextPane infoBox = new JTextPane();
         infoBox.setText(" Welcome to Java Bank\n\nLog in or create an account:");
+
+        StyledDocument doc = infoBox.getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), center, false);
+        infoBox.setText("Welcome to Java Bank\n\nLog in or create an account:");
 
         infoBox.setEditable(false);
         infoBox.setFont(new Font("SansSerif", Font.BOLD, 20));
@@ -67,6 +73,8 @@ public class client{
         passRow.setMaximumSize(new Dimension(400, 40));
         loginCenter.add(userRow);
         loginCenter.add(passRow);
+        loginCenter.setBorder(BorderFactory.createEmptyBorder(60,0,10,0));
+
         login.add(loginCenter, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
@@ -76,6 +84,8 @@ public class client{
         createAccountButton.setPreferredSize(new Dimension(150, 30));
         buttonPanel.add(loginButton);
         buttonPanel.add(createAccountButton);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10,0,60,0));
+
         login.add(buttonPanel, BorderLayout.SOUTH);
 
         loginButton.addActionListener(new ActionListener() {
@@ -119,15 +129,18 @@ public class client{
         jf.getContentPane().removeAll();
 
         JPanel account_info = new JPanel(new BorderLayout());
-        JLabel welcome_mesg = new JLabel("Welcome to your account!");
-        welcome_mesg.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        JLabel welcome_mesg = new JLabel("Account Information");
+        welcome_mesg.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
+        welcome_mesg.setFont(new Font("SansSerif", Font.BOLD, 30));
         account_info.add(welcome_mesg, BorderLayout.NORTH);
 
         JTextArea display_accounts = new JTextArea();
         display_accounts.setEditable(false);
         display_accounts.setFont(new Font("SansSerif", Font.PLAIN, 16));
         JScrollPane scroll_pane = new JScrollPane(display_accounts);
+        account_info.setBorder(BorderFactory.createEmptyBorder(20, 60, 20, 60)); 
         account_info.add(scroll_pane, BorderLayout.CENTER);
+
 
         sout.println("DISPLAY_ACCOUNTS");
         String all_accounts = "";
@@ -321,7 +334,6 @@ public class client{
                     if (!fromAcc.isEmpty() && !userId.isEmpty() && !toAcc.isEmpty() && !amount.isEmpty()) {
                         sout.println("SEND " + fromAcc + " " + userId + " " + toAcc + " " + amount);
                         if (sin.hasNextLine()) {
-                            System.out.println("Here after if next line");
                             String response = sin.nextLine();
                             if (response.equals("SUCCESS")) {
                                 JOptionPane.showMessageDialog(jf, "Transfer successful!");
