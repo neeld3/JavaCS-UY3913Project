@@ -204,7 +204,6 @@ public class client{
                 accRow.add(accField, BorderLayout.CENTER);
                 accRow.setMaximumSize(new Dimension(300, 40));
             
-                // Amount
                 JPanel amountRow = new JPanel(new BorderLayout());
                 JLabel amountLabel = new JLabel("Amount:");
                 JTextField amountField = new JTextField();
@@ -271,7 +270,7 @@ public class client{
                 });
                 jp.add(clear, BorderLayout.SOUTH);
                 jp.add(new JLabel("Add Signature Below: "), BorderLayout.NORTH);
-                // From Account ID
+
                 JPanel fromRow = new JPanel(new BorderLayout());
                 JLabel fromLabel = new JLabel("Your Account ID:");
                 JTextField fromField = new JTextField();
@@ -279,7 +278,6 @@ public class client{
                 fromRow.add(fromField, BorderLayout.CENTER);
                 fromRow.setMaximumSize(new Dimension(300, 40));
             
-                // Recipient User ID
                 JPanel userRow = new JPanel(new BorderLayout());
                 JLabel userLabel = new JLabel("Recipient User ID:");
                 JTextField userField = new JTextField();
@@ -287,7 +285,6 @@ public class client{
                 userRow.add(userField, BorderLayout.CENTER);
                 userRow.setMaximumSize(new Dimension(300, 40));
             
-                // Recipient Account ID
                 JPanel toRow = new JPanel(new BorderLayout());
                 JLabel toLabel = new JLabel("Recipient Account ID:");
                 JTextField toField = new JTextField();
@@ -295,7 +292,6 @@ public class client{
                 toRow.add(toField, BorderLayout.CENTER);
                 toRow.setMaximumSize(new Dimension(300, 40));
             
-                // Amount
                 JPanel amountRow = new JPanel(new BorderLayout());
                 JLabel amountLabel = new JLabel("Amount:");
                 JTextField amountField = new JTextField();
@@ -328,11 +324,9 @@ public class client{
                             System.out.println("Here after if next line");
                             String response = sin.nextLine();
                             if (response.equals("SUCCESS")) {
-                                System.out.println("Here after success");
                                 JOptionPane.showMessageDialog(jf, "Transfer successful!");
-                                accountPage(); // Refresh screen
+                                accountPage(); 
                             } else {
-                                System.out.println("Here in else after success");
                                 JOptionPane.showMessageDialog(jf, "Transfer failed.");
                                 accountPage();
                             }
@@ -355,14 +349,48 @@ public class client{
 
     static void transactionLog(){
         jf.getContentPane().removeAll();
-
+        sout.println("VIEW");
+        String allTransactions = "";
+        while (sin.hasNextLine()) {
+            String line = sin.nextLine();
+            if (line.equals("END")) {
+                break;
+            } 
+            allTransactions += line + "\n";
+        }
+        final String toFileTransactions = allTransactions;
         JPanel transactions = new JPanel(new BorderLayout());
+        JPanel buttonRow = new JPanel(new BorderLayout());
         JButton toFile = new JButton("To File");
-        transactions.add(toFile, BorderLayout.SOUTH);
+        buttonRow.add(toFile, BorderLayout.CENTER);
+        JButton back = new JButton("Back");
+        back.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){accountPage();}});
+        toFile.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                try{
+                    sout.println("NAME");
+                    String name = sin.nextLine();
+                    String fileName = name + "Transactions"+ ".txt";                    
+                    PrintStream outFile = new PrintStream(fileName);
+                    outFile.println(toFileTransactions);
+                    outFile.close();
+                }
+                catch(Exception ex){}
+            }
+        });
+        buttonRow.add(back, BorderLayout.EAST);
+        transactions.add(buttonRow, BorderLayout.SOUTH);
         JTextArea list = new JTextArea();
-        
+        list.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(list);
+        list.setText(allTransactions);
+        transactions.add(scrollPane, BorderLayout.CENTER);
 
+        jf.add(transactions);
+        jf.revalidate();
+        jf.repaint();
     }
+    
 }
 
 class MyPanel extends JPanel{
