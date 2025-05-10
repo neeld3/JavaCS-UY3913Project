@@ -10,9 +10,6 @@ import java.awt.event.*;
 
 public class Client{
     static JFrame jf;
-    static JPanel login;
-    static JTextField username_field;
-    static JPasswordField password_field;
     static Socket socket;
     static PrintStream sout;
     static Scanner sin;
@@ -30,15 +27,24 @@ public class Client{
         jf = new JFrame("client");
         jf.setSize(1000,500);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
-        logIn();
-        jf.add(login);
+
+        change_panel(new login_page());        
         jf.setVisible(true);   
     }
+    public static void change_panel(JPanel new_panel){
+        jf.getContentPane().removeAll();
+        jf.add(new_panel);
+        jf.revalidate();
+        jf.repaint();
+    }
+}
 
-    // Welcome Page set up
-    static void logIn(){
-        login = new JPanel(new BorderLayout());
+class login_page extends JPanel{
+    static JTextField username_field;
+    static JPasswordField password_field;
+
+    public login_page(){
+        setLayout(new BorderLayout());
         JTextPane info_box = new JTextPane();
 
         // Custom text styling
@@ -52,7 +58,7 @@ public class Client{
         info_box.setText("Welcome to Java Bank!\n\nLog In or Create an Account:");
         info_box.setEditable(false);
         info_box.setFont(new Font("SansSerif", Font.BOLD, 20));
-        login.add(info_box, BorderLayout.NORTH);
+        add(info_box, BorderLayout.NORTH);
         
         // Customizing 'Username' Area
         JPanel username_box = new JPanel(new BorderLayout());
@@ -82,8 +88,7 @@ public class Client{
         login_place.add(username_box);
         login_place.add(password_box);
         login_place.setBorder(BorderFactory.createEmptyBorder(40,0,10,0));
-
-        login.add(login_place, BorderLayout.CENTER);
+        add(login_place, BorderLayout.CENTER);
 
         // Creating 'Log In' and 'Create Account' Buttons
         JPanel button_panel = new JPanel();
@@ -98,32 +103,68 @@ public class Client{
         button_panel.setBorder(BorderFactory.createEmptyBorder(10,0,60,0));
         button_panel.setBackground(new Color(220, 230, 245));
 
-        login.add(button_panel, BorderLayout.SOUTH);
+        add(button_panel, BorderLayout.SOUTH);
 
-        login_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){signIn();}});
-        create_acc_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){createAccount();}});
+        login_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){sign_in();}});
+        create_acc_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){create_account();}});
     }
-    
-    // Account Page set up
-    static void accountPage(String username) {
-        jf.getContentPane().removeAll();
+    // Log in
+    private void sign_in() {
+        String username = username_field.getText();
+        String password = new String(password_field.getPassword());
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
+            return;
+        }
+        Client.sout.println("LOGIN " + username + " " + password);
+        if (Client.sin.hasNextLine()) {
+            String response = Client.sin.nextLine();
+            if (response.equals("SUCCESS")) {
+                Client.current_username = username;
+                Client.change_panel(new account_page());
+            } else {
+                JOptionPane.showMessageDialog(Client.jf, response);
+            }
+        }
+    }
 
-        JPanel account_info = new JPanel(new BorderLayout());
-        account_info.setBackground(new Color(220, 230, 245));
-        account_info.setBorder(BorderFactory.createEmptyBorder(10, 60, 20, 60));
+    private void create_account() {
+        String username = username_field.getText();
+        String password = new String(password_field.getPassword());
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
+            return;
+        }
+        Client.sout.println("CREATE " + username + " " + password);
+        if (Client.sin.hasNextLine()) {
+            String response = Client.sin.nextLine();
+            if (response.equals("SUCCESS")) {
+                Client.current_username = username;
+                Client.change_panel(new account_page());
+            }else {
+                JOptionPane.showMessageDialog(Client.jf, response);
+            }
+        }
+    }
+}
+class account_page extends JPanel{
+    public account_page(){
+        setLayout(new BorderLayout());
+        setBackground(new Color(220, 230, 245));
+        setBorder(BorderFactory.createEmptyBorder(10, 60, 20, 60));
 
         JLabel title = new JLabel("Account Information");
         title.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
         title.setFont(new Font("SansSerif", Font.BOLD, 30));
-        account_info.add(title, BorderLayout.NORTH);
+        add(title, BorderLayout.NORTH);
 
         JPanel account_list = new JPanel();
         account_list.setLayout(new BoxLayout(account_list, BoxLayout.Y_AXIS));
         account_list.setBackground(new Color(255, 255, 255));
         account_list.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        sout.println("DISPLAY_ACCOUNTS");
-        JLabel welcome_label = new JLabel("Welcome, " + username + "!");
+        Client.sout.println("DISPLAY_ACCOUNTS");
+        JLabel welcome_label = new JLabel("Welcome, " + Client.current_username + "!");
         welcome_label.setFont(new Font("SansSerif", Font.BOLD, 18));
         welcome_label.setAlignmentX(Component.CENTER_ALIGNMENT);
         welcome_label.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0)); 
@@ -131,8 +172,8 @@ public class Client{
         account_list.add(welcome_label);
 
         // Displaying accounts' information
-        while (sin.hasNextLine()) {
-            String line = sin.nextLine();
+        while (Client.sin.hasNextLine()) {
+            String line = Client.sin.nextLine();
             String shared_account = null;
             if (line.equals("END")) {
                 break;
@@ -169,7 +210,7 @@ public class Client{
 
         JScrollPane scroll = new JScrollPane(account_list);
         scroll.setBorder(BorderFactory.createEmptyBorder(10, 60, 10, 60));
-        account_info.add(scroll, BorderLayout.CENTER);
+        add(scroll, BorderLayout.CENTER);
 
         // Creating action buttons
         JPanel buttons = new JPanel();
@@ -183,60 +224,17 @@ public class Client{
         deposit.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){deposit();}}); 
         withdraw.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){withdraw();}});
         send.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){send();}});
-        transactions.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){transactionLog();}});
+        transactions.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){transaction_log();}});
 
         buttons.add(deposit);
         buttons.add(withdraw);
         buttons.add(send);
         buttons.add(transactions);
 
-        account_info.add(buttons, BorderLayout.SOUTH);
-        jf.add(account_info);
-        jf.revalidate();
-        jf.repaint();
+        add(buttons, BorderLayout.SOUTH);
     }
-
-    // Log in
-    static void signIn() {
-        String username = Client.username_field.getText();
-        String password = new String(Client.password_field.getPassword());
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
-            return;
-        }
-        Client.sout.println("LOGIN " + username + " " + password);
-        if (Client.sin.hasNextLine()) {
-            String response = Client.sin.nextLine();
-            if (response.equals("SUCCESS")) {
-                Client.current_username = username;
-                Client.accountPage(Client.current_username);
-            } else {
-                JOptionPane.showMessageDialog(Client.jf, response);
-            }
-        }
-    }
-
-    static void createAccount() {
-        String username = Client.username_field.getText();
-        String password = new String(Client.password_field.getPassword());
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
-            return;
-        }
-        Client.sout.println("CREATE " + username + " " + password);
-        if (Client.sin.hasNextLine()) {
-            String response = Client.sin.nextLine();
-            if (response.equals("SUCCESS")) {
-                Client.current_username = username;
-                Client.accountPage(Client.current_username);
-            }else {
-                JOptionPane.showMessageDialog(Client.jf, response);
-            }
-        }
-    }
-
-    // Deposit Money
-    static void deposit() {
+    //deposit functionality
+    private void deposit() {
         JPanel deposit_panel = new JPanel();
         deposit_panel.setLayout(new BoxLayout(deposit_panel, BoxLayout.Y_AXIS));
     
@@ -259,33 +257,30 @@ public class Client{
         deposit_panel.add(account_box);
         deposit_panel.add(amount_box);
     
-        int result = JOptionPane.showConfirmDialog(jf, deposit_panel, "Deposit Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(Client.jf, deposit_panel, "Deposit Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
     
         if (result == JOptionPane.OK_OPTION) {
             String account_ID = account_field.getText();
             String amount = amount_field.getText();
     
             if (!account_ID.isEmpty() && !amount.isEmpty()) {
-                sout.println("DEPOSIT " + account_ID + " " + amount);
-                if (sin.hasNextLine()) {
-                    String response = sin.nextLine();
+                Client.sout.println("DEPOSIT " + account_ID + " " + amount);
+                if (Client.sin.hasNextLine()) {
+                    String response = Client.sin.nextLine();
                     if (response.equals("SUCCESS")) {
-                        JOptionPane.showMessageDialog(jf, "Deposit Successful!");
-                        accountPage(current_username);
+                        JOptionPane.showMessageDialog(Client.jf, "Deposit Successful!");
                     } else {
-                        JOptionPane.showMessageDialog(jf, response);
-                        accountPage(current_username);
+                        JOptionPane.showMessageDialog(Client.jf, response);
                     }
                 }
             } else {
-                JOptionPane.showMessageDialog(jf, "Please enter all the required information.");
-                accountPage(current_username);
+                JOptionPane.showMessageDialog(Client.jf, "Please enter all the required information.");
             }
+            Client.change_panel(new account_page());
         }
     }
-
     // Withdraw Money
-    static void withdraw() {
+    private void withdraw() {
         JPanel withdraw_panel = new JPanel();
         withdraw_panel.setLayout(new BoxLayout(withdraw_panel, BoxLayout.Y_AXIS));
     
@@ -308,7 +303,7 @@ public class Client{
         withdraw_panel.add(account_box);
         withdraw_panel.add(amount_box);
     
-        int result = JOptionPane.showConfirmDialog(jf, withdraw_panel, 
+        int result = JOptionPane.showConfirmDialog(Client.jf, withdraw_panel, 
             "Withdraw Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
     
         if (result == JOptionPane.OK_OPTION) {
@@ -316,26 +311,24 @@ public class Client{
             String amount = amount_field.getText();
     
             if (!account_ID.isEmpty() && !amount.isEmpty()) {
-                sout.println("WITHDRAW " + account_ID + " " + amount);
-                if (sin.hasNextLine()) {
-                    String response = sin.nextLine();
+                Client.sout.println("WITHDRAW " + account_ID + " " + amount);
+                if (Client.sin.hasNextLine()) {
+                    String response = Client.sin.nextLine();
                     if (response.equals("SUCCESS")) {
-                        JOptionPane.showMessageDialog(jf, "Withdraw Successful!");
-                        accountPage(current_username); 
+                        JOptionPane.showMessageDialog(Client.jf, "Withdraw Successful!");
                     } else {
-                        JOptionPane.showMessageDialog(jf, response);
-                        accountPage(current_username);
+                        JOptionPane.showMessageDialog(Client.jf, response);
                     }
                 }
             } else {
-                JOptionPane.showMessageDialog(jf, "Please enter all the required information.");
-                accountPage(current_username);
+                JOptionPane.showMessageDialog(Client.jf, "Please enter all the required information.");
             }
+            Client.change_panel(new account_page());
         }
     }
 
     // Send Money
-    static void send() {
+    private void send() {
         JPanel send_panel = new JPanel();
         send_panel.setLayout(new BoxLayout(send_panel, BoxLayout.Y_AXIS));
 
@@ -411,11 +404,11 @@ public class Client{
         send_panel.add(amount_box);
         send_panel.add(jp);
     
-        int result = JOptionPane.showConfirmDialog(jf, send_panel, "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(Client.jf, send_panel, "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
     
         if (result == JOptionPane.OK_OPTION) {
             if (!jp.hasSignature()) {
-                JOptionPane.showMessageDialog(jf, "Please draw your signature before sending.");
+                JOptionPane.showMessageDialog(Client.jf, "Please draw your signature before sending.");
                 return;
             }
             String from_acc = from_field.getText();
@@ -424,31 +417,31 @@ public class Client{
             String amount = amount_field.getText();
     
             if (!from_acc.isEmpty() && !to_ID.isEmpty() && !to_acc.isEmpty() && !amount.isEmpty()) {
-                sout.println("SEND " + from_acc + " " + to_ID + " " + to_acc + " " + amount);
-                if (sin.hasNextLine()) {
-                    String response = sin.nextLine();
+                Client.sout.println("SEND " + from_acc + " " + to_ID + " " + to_acc + " " + amount);
+                if (Client.sin.hasNextLine()) {
+                    String response = Client.sin.nextLine();
                     if (response.equals("SUCCESS")) {
-                        JOptionPane.showMessageDialog(jf, "Transfer Successful!");
-                        accountPage(current_username); 
+                        JOptionPane.showMessageDialog(Client.jf, "Transfer Successful!");
                     } else {
-                        JOptionPane.showMessageDialog(jf, response);
-                        accountPage(current_username);
+                        JOptionPane.showMessageDialog(Client.jf, response);
                     }
                 }
             } else {
-                JOptionPane.showMessageDialog(jf, "Please enter all the required information.");
-                accountPage(current_username);
+                JOptionPane.showMessageDialog(Client.jf, "Please enter all the required information.");
             }
+            Client.change_panel(new account_page());
         }
     }
-
-    // Display Transactions
-    static void transactionLog(){
-        jf.getContentPane().removeAll();
-        sout.println("VIEW");
+    private void transaction_log(){
+        Client.change_panel(new transaction_page());
+    }
+}
+class transaction_page extends JPanel{
+    public transaction_page(){
+        Client.sout.println("VIEW");
         String all_transactions = "";
-        while (sin.hasNextLine()) {
-            String line = sin.nextLine();
+        while (Client.sin.hasNextLine()) {
+            String line = Client.sin.nextLine();
             if (line.equals("END")) {
                 break;
             } 
@@ -456,17 +449,18 @@ public class Client{
         }
 
         final String toFileTransactions = all_transactions;
-        JPanel transactions = new JPanel(new BorderLayout());
+        setLayout(new BorderLayout());
+
         JPanel button_area = new JPanel(new BorderLayout());
         JButton to_file = new JButton("To File");
         button_area.add(to_file, BorderLayout.CENTER);
         JButton back = new JButton("Back");
-        back.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){accountPage(current_username);}});
+        back.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){Client.change_panel(new account_page());}});
         to_file.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 try{
-                    sout.println("NAME");
-                    String name = sin.nextLine();
+                    Client.sout.println("NAME");
+                    String name = Client.sin.nextLine();
                     String file_name = name + "Transactions"+ ".txt";                    
                     PrintStream out_file = new PrintStream(file_name);
                     out_file.println(toFileTransactions);
@@ -478,22 +472,16 @@ public class Client{
         });
 
         button_area.add(back, BorderLayout.EAST);
-        transactions.add(button_area, BorderLayout.SOUTH);
+        add(button_area, BorderLayout.SOUTH);
         JTextArea list = new JTextArea();
         list.setEditable(false);
 
         JScrollPane scroll = new JScrollPane(list);
         list.setText(all_transactions);
-        transactions.add(scroll, BorderLayout.CENTER);
+        add(scroll, BorderLayout.CENTER);
 
-        jf.add(transactions);
-        jf.revalidate();
-        jf.repaint();
     }
 }
-
-
-
 
 class MyPanel extends JPanel{
     class Point{
