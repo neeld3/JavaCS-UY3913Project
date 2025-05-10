@@ -16,6 +16,7 @@ public class Client{
     static String current_username = "";
 
     public static void main(String[] args){
+        //initialize socket connection with server
         try {
             socket = new Socket("172.20.10.13", 5190);
             sout = new PrintStream(socket.getOutputStream());
@@ -23,7 +24,7 @@ public class Client{
         } catch (IOException ex) {
             System.out.println("IOException caught: " + ex.toString());
         }
-
+        //create main frame that will be userd
         jf = new JFrame("client");
         jf.setSize(1000,500);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -31,6 +32,7 @@ public class Client{
         change_panel(new login_page());        
         jf.setVisible(true);   
     }
+    //function that changes which panel is displayed on the frame. Each page will have its own class that extends panel
     public static void change_panel(JPanel new_panel){
         jf.getContentPane().removeAll();
         jf.add(new_panel);
@@ -39,6 +41,7 @@ public class Client{
     }
 }
 
+//login page panel
 class login_page extends JPanel{
     static JTextField username_field;
     static JPasswordField password_field;
@@ -105,11 +108,13 @@ class login_page extends JPanel{
 
         add(button_panel, BorderLayout.SOUTH);
 
+        //anonmyous action listeners that call method for functionality. We made methods to improve legibility.
         login_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){sign_in();}});
         create_acc_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){create_account();}});
     }
     // Log in
     private void sign_in() {
+        //gets username and password, if theyre valid it calls change_panel to show account page for that account.
         String username = username_field.getText();
         String password = new String(password_field.getPassword());
         if (username.isEmpty() || password.isEmpty()) {
@@ -129,6 +134,7 @@ class login_page extends JPanel{
     }
 
     private void create_account() {
+        //stores username and password, if the username is valid then it creates new account and shows account page for that new account
         String username = username_field.getText();
         String password = new String(password_field.getPassword());
         if (username.isEmpty() || password.isEmpty()) {
@@ -147,31 +153,37 @@ class login_page extends JPanel{
         }
     }
 }
+
+//account page panel
 class account_page extends JPanel{
     public account_page(){
+        //styling panel
         setLayout(new BorderLayout());
         setBackground(new Color(220, 230, 245));
         setBorder(BorderFactory.createEmptyBorder(10, 60, 20, 60));
 
+        //title on the page
         JLabel title = new JLabel("Account Information");
         title.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
         title.setFont(new Font("SansSerif", Font.BOLD, 30));
         add(title, BorderLayout.NORTH);
 
+        //list of all bank accounts for this user account
         JPanel account_list = new JPanel();
         account_list.setLayout(new BoxLayout(account_list, BoxLayout.Y_AXIS));
         account_list.setBackground(new Color(255, 255, 255));
         account_list.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        Client.sout.println("DISPLAY_ACCOUNTS");
+        //welcome label 
         JLabel welcome_label = new JLabel("Welcome, " + Client.current_username + "!");
         welcome_label.setFont(new Font("SansSerif", Font.BOLD, 18));
         welcome_label.setAlignmentX(Component.CENTER_ALIGNMENT);
         welcome_label.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0)); 
-
         account_list.add(welcome_label);
 
-        // Displaying accounts' information
+        
+        Client.sout.println("DISPLAY_ACCOUNTS");
+        // Displaying accounts' information, reads all information back from server 
         while (Client.sin.hasNextLine()) {
             String line = Client.sin.nextLine();
             String shared_account = null;
@@ -191,6 +203,7 @@ class account_page extends JPanel{
                     shared_account = shared_accs;
                 }
 
+                //formats subpanel showing each account.
                 JPanel account = new JPanel();
                 account.setLayout(new GridLayout(2, 1));
                 account.setBackground(new Color(200, 220, 235));
@@ -207,7 +220,7 @@ class account_page extends JPanel{
                 account_list.add(account);
             }
         }
-
+        //making the account list panel scrollable if its too long
         JScrollPane scroll = new JScrollPane(account_list);
         scroll.setBorder(BorderFactory.createEmptyBorder(10, 60, 10, 60));
         add(scroll, BorderLayout.CENTER);
@@ -220,12 +233,13 @@ class account_page extends JPanel{
         JButton send = new JButton("Send Money");
         JButton transactions = new JButton("View Transactions");
 
-        // Adding action listeners
+        // Adding action listeners for each button
         deposit.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){deposit();}}); 
         withdraw.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){withdraw();}});
         send.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){send();}});
         transactions.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){transaction_log();}});
 
+        //adding buttons to another panel for format
         buttons.add(deposit);
         buttons.add(withdraw);
         buttons.add(send);
@@ -235,9 +249,11 @@ class account_page extends JPanel{
     }
     //deposit functionality
     private void deposit() {
+        //styling panel that shows
         JPanel deposit_panel = new JPanel();
         deposit_panel.setLayout(new BoxLayout(deposit_panel, BoxLayout.Y_AXIS));
-    
+
+        //formatting how account information is asked for in popup
         JPanel account_box = new JPanel(new BorderLayout());
         JLabel account_label = new JLabel("Account ID:");
         JTextField account_field = new JTextField();
@@ -246,6 +262,7 @@ class account_page extends JPanel{
         account_box.add(account_field, BorderLayout.CENTER);
         account_box.setPreferredSize(new Dimension(100, 30));
 
+        //formatting how the amount is asked for in popup
         JPanel amount_box = new JPanel(new BorderLayout());
         JLabel amount_label = new JLabel("Amount:");
         JTextField amount_field = new JTextField();
@@ -254,11 +271,17 @@ class account_page extends JPanel{
         amount_box.add(amount_field, BorderLayout.CENTER);
         amount_box.setPreferredSize(new Dimension(100, 30));
 
+        //adding both account and amount fields
         deposit_panel.add(account_box);
         deposit_panel.add(amount_box);
-    
+
+        //getting result from which button is clicked in the popup optionPane
         int result = JOptionPane.showConfirmDialog(Client.jf, deposit_panel, "Deposit Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    
+
+
+        //based on what button is clicked, does different things
+
+        //if its OK, and all things are valid and present, it writes to server the action and shows account page again, else it asks to enter everything
         if (result == JOptionPane.OK_OPTION) {
             String account_ID = account_field.getText();
             String amount = amount_field.getText();
@@ -281,9 +304,11 @@ class account_page extends JPanel{
     }
     // Withdraw Money
     private void withdraw() {
+        //styling panel that shows
         JPanel withdraw_panel = new JPanel();
         withdraw_panel.setLayout(new BoxLayout(withdraw_panel, BoxLayout.Y_AXIS));
-    
+
+        //formatting how account information is asked for in popup
         JPanel account_box = new JPanel(new BorderLayout());
         JLabel account_label = new JLabel("Account ID:");
         JTextField account_field = new JTextField();
@@ -292,6 +317,7 @@ class account_page extends JPanel{
         account_box.add(account_field, BorderLayout.CENTER);
         account_box.setPreferredSize(new Dimension(100, 30));
 
+        //formatting how the amount is asked for in popup
         JPanel amount_box = new JPanel(new BorderLayout());
         JLabel amount_label = new JLabel("Amount:");
         JTextField amount_field = new JTextField();
@@ -302,10 +328,14 @@ class account_page extends JPanel{
     
         withdraw_panel.add(account_box);
         withdraw_panel.add(amount_box);
-    
+        
+        //getting result from which button is clicked in the popup optionPane
         int result = JOptionPane.showConfirmDialog(Client.jf, withdraw_panel, 
             "Withdraw Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
     
+        //based on what button is clicked, does different things
+
+        //if its OK, and all things are valid and present, it writes to server the action and shows account page again, else it asks to enter everything
         if (result == JOptionPane.OK_OPTION) {
             String account_ID = account_field.getText();
             String amount = amount_field.getText();
@@ -362,10 +392,11 @@ class account_page extends JPanel{
                 jp.clear();
             }
         });
-
+        //styling signature area
         jp.add(clear, BorderLayout.SOUTH);
         jp.add(new JLabel("Add Signature Below: "), BorderLayout.NORTH);
 
+        //styling areas for entering information related to the sending
         JPanel from_box = new JPanel(new BorderLayout());
         JLabel from_label = new JLabel("Your Account ID:");
         JTextField from_field = new JTextField();
@@ -373,7 +404,7 @@ class account_page extends JPanel{
         from_box.add(from_label, BorderLayout.WEST);
         from_box.add(from_field, BorderLayout.CENTER);
         from_box.setMaximumSize(new Dimension(300, 40));
-    
+
         JPanel receiver_ID = new JPanel(new BorderLayout());
         JLabel receiver_label = new JLabel("Recipient User ID:");
         JTextField receiver_field = new JTextField();
@@ -403,9 +434,11 @@ class account_page extends JPanel{
         send_panel.add(receiver_acc);
         send_panel.add(amount_box);
         send_panel.add(jp);
-    
+
+        //getting result from which button is clicked in the popup optionPane
         int result = JOptionPane.showConfirmDialog(Client.jf, send_panel, "Send Money", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    
+
+        //if its OK, and all things are valid and present, it writes to server the action and shows account page again, else it asks to enter everything
         if (result == JOptionPane.OK_OPTION) {
             if (!jp.hasSignature()) {
                 JOptionPane.showMessageDialog(Client.jf, "Please draw your signature before sending.");
@@ -432,13 +465,19 @@ class account_page extends JPanel{
             Client.change_panel(new account_page());
         }
     }
+    //for when the transaction log button is pressed
     private void transaction_log(){
         Client.change_panel(new transaction_page());
     }
 }
+
+//class for the transaction page
 class transaction_page extends JPanel{
     public transaction_page(){
+        //writes to server to get the transactions for this account
         Client.sout.println("VIEW");
+
+        //stores all the transactions as a string
         String all_transactions = "";
         while (Client.sin.hasNextLine()) {
             String line = Client.sin.nextLine();
@@ -448,14 +487,19 @@ class transaction_page extends JPanel{
             all_transactions += line + "\n";
         }
 
+        //stores transactions in a final string variable because writing to text file requires it to be final
         final String toFileTransactions = all_transactions;
-        setLayout(new BorderLayout());
 
+        //formatting how the panel looks
+        setLayout(new BorderLayout());
         JPanel button_area = new JPanel(new BorderLayout());
         JButton to_file = new JButton("To File");
         button_area.add(to_file, BorderLayout.CENTER);
         JButton back = new JButton("Back");
+        //action listeners for the back button and the toFile button.
         back.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){Client.change_panel(new account_page());}});
+
+        //toFile button writes the values of the string to a file which is named after the account name
         to_file.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 try{
@@ -470,12 +514,14 @@ class transaction_page extends JPanel{
                 }
             }
         });
-
         button_area.add(back, BorderLayout.EAST);
+
+        //adds buttons 
         add(button_area, BorderLayout.SOUTH);
         JTextArea list = new JTextArea();
         list.setEditable(false);
 
+        //makes sure the panel can scroll and show all transactions
         JScrollPane scroll = new JScrollPane(list);
         list.setText(all_transactions);
         add(scroll, BorderLayout.CENTER);
@@ -483,6 +529,7 @@ class transaction_page extends JPanel{
     }
 }
 
+//drawing signature class
 class MyPanel extends JPanel{
     class Point{
         int x;
