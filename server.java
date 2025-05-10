@@ -203,7 +203,7 @@ class Database {
         }
         conn.setAutoCommit(false);
         
-        //sends all updates to the database
+        //sends all updates to the database for sending money between users
         try {
             PreparedStatement check_sender = conn.prepareStatement("SELECT * FROM user_accounts WHERE user_id = ? AND account_id = ?");
             check_sender.setInt(1, session);
