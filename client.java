@@ -100,8 +100,8 @@ public class Client{
 
         login.add(button_panel, BorderLayout.SOUTH);
 
-        login_button.addActionListener(new LoginButton());
-        create_acc_button.addActionListener(new CreateButton());
+        login_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){signIn();}});
+        create_acc_button.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){createAccount();}});
     }
     
     // Account Page set up
@@ -126,7 +126,7 @@ public class Client{
         JLabel welcome_label = new JLabel("Welcome, " + username + "!");
         welcome_label.setFont(new Font("SansSerif", Font.BOLD, 18));
         welcome_label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        welcome_label.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0)); // top and bottom padding
+        welcome_label.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0)); 
 
         account_list.add(welcome_label);
 
@@ -194,6 +194,45 @@ public class Client{
         jf.add(account_info);
         jf.revalidate();
         jf.repaint();
+    }
+
+    // Log in
+    static void signIn() {
+        String username = Client.username_field.getText();
+        String password = new String(Client.password_field.getPassword());
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
+            return;
+        }
+        Client.sout.println("LOGIN " + username + " " + password);
+        if (Client.sin.hasNextLine()) {
+            String response = Client.sin.nextLine();
+            if (response.equals("SUCCESS")) {
+                Client.current_username = username;
+                Client.accountPage(Client.current_username);
+            } else {
+                JOptionPane.showMessageDialog(Client.jf, response);
+            }
+        }
+    }
+
+    static void createAccount() {
+        String username = Client.username_field.getText();
+        String password = new String(Client.password_field.getPassword());
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
+            return;
+        }
+        Client.sout.println("CREATE " + username + " " + password);
+        if (Client.sin.hasNextLine()) {
+            String response = Client.sin.nextLine();
+            if (response.equals("SUCCESS")) {
+                Client.current_username = username;
+                Client.accountPage(Client.current_username);
+            }else {
+                JOptionPane.showMessageDialog(Client.jf, response);
+            }
+        }
     }
 
     // Deposit Money
@@ -454,48 +493,6 @@ public class Client{
 }
 
 
-class LoginButton implements ActionListener {
-    public void actionPerformed(ActionEvent e){
-        String username = Client.username_field.getText();
-        String password = new String(Client.password_field.getPassword());
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
-            return;
-        }
-        Client.sout.println("LOGIN " + username + " " + password);
-        if (Client.sin.hasNextLine()) {
-            String response = Client.sin.nextLine();
-            if (response.equals("SUCCESS")) {
-                Client.current_username = username;
-                Client.accountPage(Client.current_username);
-            } else {
-                JOptionPane.showMessageDialog(Client.jf, response);
-            }
-        }
-    }
-}
-
-
-class CreateButton implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-        String username = Client.username_field.getText();
-        String password = new String(Client.password_field.getPassword());
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(Client.jf, "Please enter both username and password.");
-            return;
-        }
-        Client.sout.println("CREATE " + username + " " + password);
-        if (Client.sin.hasNextLine()) {
-            String response = Client.sin.nextLine();
-            if (response.equals("SUCCESS")) {
-                Client.current_username = username;
-                Client.accountPage(Client.current_username);
-            }else {
-                JOptionPane.showMessageDialog(Client.jf, response);
-            }
-        }
-    }
-}
 
 
 class MyPanel extends JPanel{
