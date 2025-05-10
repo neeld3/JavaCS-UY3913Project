@@ -2,12 +2,9 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.mindrot.jbcrypt.BCrypt;
 
-
-
-public class server {
+public class Server {
     public static ArrayList<Socket> clients = new ArrayList<Socket>();
     public static Database shared_database;  
     public static void main(String[] args) {
@@ -19,13 +16,9 @@ public class server {
                 Socket socket = server.accept(); 
                 clients.add(socket);
                 new ProcessConnection(socket, shared_database).start();
-
-                
             }
-            
-            
         } catch (IOException | SQLException ex) {
-            System.out.println("IOException: " + ex.toString());
+            System.out.println("Exception caught: " + ex.toString());
         } 
     }
 }
@@ -39,43 +32,59 @@ class Database {
     }
 
     public int login(String username, String password, PrintStream out) throws SQLException {
-        PreparedStatement query = conn.prepareStatement("SELECT user_id FROM user WHERE username = ? AND password = ?");
+        PreparedStatement query = conn.prepareStatement("SELECT user_id, password FROM user WHERE username = ?");
         query.setString(1, username);
-        query.setString(2, password);
         ResultSet result = query.executeQuery();
 
         if (result.next()) {
-            int session = result.getInt("user_id");
-            out.println("SUCCESS");
-            out.println("Login successful! Welcome " + username + ".");
-            return session;
+            String stored_pass = result.getString("password");
+             if (BCrypt.checkpw(password, stored_pass) ) {
+                int session = result.getInt("user_id");
+                out.println("SUCCESS");
+                return session;
+            } else {
+                out.println("Login failed. Enter the correct password.");
+                return -1;
+            }
         } else {
-            out.println("Login failed. Invalid username or password.");
+            out.println("Login failed. Invalid username.");
             return -1;
         }
     }
 
-    public int signup(String username, String password, int session, PrintStream out) throws SQLException {
+    public int signup(String username, String password, PrintStream out) throws SQLException {
+        username = username.toLowerCase();
+        PreparedStatement check = conn.prepareStatement("SELECT * FROM User WHERE username = ?");
+        check.setString(1, username);
+        ResultSet result = check.executeQuery();
+        if (result.next()){
+            out.println("Username already exists");
+            return -1;
+        }
         PreparedStatement query = conn.prepareStatement("{CALL signUp(?, ?)}");
+        String hashed_password = BCrypt.hashpw(password, BCrypt.gensalt());
         query.setString(1, username);
-        query.setString(2, password);
-        System.out.println("Before signing up");
+        query.setString(2, hashed_password);
         query.execute();
-        
-        System.out.println("after signing up");
         out.println("SUCCESS");
         return login(username, password, out);
     }
 
     public void displayAccounts(int session, PrintStream out) throws SQLException {
-        PreparedStatement query = conn.prepareStatement("SELECT acc.account_id, acc.balance FROM account acc JOIN user_accounts ON acc.account_id = user_accounts.account_id WHERE user_accounts.user_id = ?");
+        PreparedStatement query = conn.prepareStatement("{CALL get_accounts(?)}");
         query.setInt(1, session);
         ResultSet result = query.executeQuery();
 
         while (result.next()){
             int account_id = result.getInt("account_id");
             double balance = result.getDouble("balance");
-            out.println("ACCOUNT " + account_id + " " + balance);
+            String shared = result.getString("shared_with");
+            if (shared != null) {
+                out.println("ACCOUNT " + account_id + " " + balance + " SHARED_WITH " + shared);
+            } else {
+                out.println("ACCOUNT " + account_id + " " + balance);
+            }
+
         }
         out.println("END");
     }
@@ -117,7 +126,11 @@ class Database {
     }
  
 
-    public synchronized void deposit(int account_id, double balance, int session, PrintStream out) throws SQLException {
+    public synchronized void deposit(int account_id, double amount, int session, PrintStream out) throws SQLException {
+        if (amount <= 0){
+            out.println("Deposit amount has to be greater than $0");
+            return;
+        }
         PreparedStatement check_user = conn.prepareStatement("SELECT * FROM user_accounts WHERE user_id = ? AND account_id = ?");
         check_user.setInt(1, session);
         check_user.setInt(2, account_id);
@@ -125,16 +138,20 @@ class Database {
         if (result.next()) {
             PreparedStatement query = conn.prepareStatement("{CALL deposit(?, ?)}");
             query.setInt(1, account_id);
-            query.setDouble(2, balance);
+            query.setDouble(2, amount);
             query.execute();
-            record_transaction(session, account_id, null, null, balance, "Deposit");
+            record_transaction(session, account_id, null, null, amount, "Deposit");
             out.println("SUCCESS");
         } else {
-            out.println("Can't deposit money to someone else's account");
+            out.println("Deposit failed.");
         }
     }
 
-    public synchronized void withdraw(int account_id, double balance, int session, PrintStream out) throws SQLException {
+    public synchronized void withdraw(int account_id, double amount, int session, PrintStream out) throws SQLException {
+        if (amount <= 0){
+            out.println("Withdraw amount has to be greater than $0");
+            return;
+        }
         PreparedStatement check_user = conn.prepareStatement("SELECT * FROM user_accounts WHERE user_id = ? AND account_id = ?");
         check_user.setInt(1, session);
         check_user.setInt(2, account_id);
@@ -144,12 +161,10 @@ class Database {
                 check_funds.setInt(1, session);
                 check_funds.setInt(2, account_id);
                 ResultSet fund_result = check_funds.executeQuery();
-                System.out.println("before getting balance");
                 if (fund_result.next()){
                     double sender_balance = fund_result.getDouble("balance");
-                    System.out.println("sender balance: " + sender_balance);
-                    if (sender_balance < balance){
-                        out.println("Not enough money");
+                    if (sender_balance < amount){
+                        out.println("Withdraw amount has to be less than the available balance.");
                         return;
                     }
                 } else {
@@ -157,18 +172,21 @@ class Database {
                 }
             PreparedStatement query = conn.prepareStatement("{CALL withdraw(?, ?)}");
             query.setInt(1, account_id);
-            query.setDouble(2, balance);
+            query.setDouble(2, amount);
             query.execute();
-            record_transaction(session, account_id, null, null, balance, "Withdraw");
+            record_transaction(session, account_id, null, null, amount, "Withdraw");
             out.println("SUCCESS");
         } else {
-            out.println("Can't withdraw money to someone else's account");
+            out.println("Withdraw failed.");
         }
     }
     
     public synchronized void send(int sender_account_id, int receiver_id, int receiver_account_id, double amount, int session, PrintStream out) throws SQLException {
+        if (amount <= 0){
+            out.println("Send amount has to be greater than $0");
+            return;
+        }
         conn.setAutoCommit(false);
-        System.out.println("before try");
         try {
             PreparedStatement check_sender = conn.prepareStatement("SELECT * FROM user_accounts WHERE user_id = ? AND account_id = ?");
             check_sender.setInt(1, session);
@@ -179,22 +197,19 @@ class Database {
             check_receiver.setInt(1, receiver_id);
             check_receiver.setInt(2, receiver_account_id);
             ResultSet receiver_result = check_receiver.executeQuery();
-            System.out.println("checking if sender reciever existne");
          
             boolean sender_exists = sender_result.next();
             boolean receiver_exists = receiver_result.next();
+
             if (sender_exists && receiver_exists) {
-                System.out.println("RIght in the if statement");
                 PreparedStatement check_funds = conn.prepareStatement("SELECT balance FROM user_accounts JOIN account ON account.account_id = user_accounts.account_id WHERE user_accounts.user_id = ? AND user_accounts.account_id = ?");
                 check_funds.setInt(1, session);
                 check_funds.setInt(2, sender_account_id);
                 ResultSet fund_result = check_funds.executeQuery();
-                System.out.println("before getting balance");
                 if (fund_result.next()){
                     double sender_balance = fund_result.getDouble("balance");
-                    System.out.println("sender balance: " + sender_balance);
                     if (sender_balance < amount){
-                        out.println("Not enough money");
+                        out.println("Send amount has to be less than the available balance.");
                         conn.rollback();
                         return;
                     }
@@ -212,19 +227,16 @@ class Database {
                 deposit_query.setInt(1, receiver_account_id);
                 deposit_query.setDouble(2, amount);
                 deposit_query.execute();
-                System.out.println("right before commit");
                 conn.commit();
-                System.out.println("after commit");
                 record_transaction(session, sender_account_id, receiver_id, receiver_account_id, amount, "Send");
                 out.println("SUCCESS");
             } else {
                 conn.rollback();
-                System.out.println("after commit");
-                out.println("Can't send money from someone else's account");
+                out.println("Send failed.");
             }
         } catch (SQLException ex) {
             conn.rollback();
-            out.println("Transaction Failed");
+            out.println("Transaction failed.");
         } finally {
             conn.setAutoCommit(true);
         }
@@ -251,10 +263,7 @@ class Database {
             insert_info.setDouble(6, amount);
             insert_info.execute();
         }
-
     }
-
-
 }
 
 
@@ -284,7 +293,7 @@ class ProcessConnection extends Thread{
                         session = user_id;
                     }
                 } else if (user_input[0].equals("CREATE")) {
-                    int user_id = database.signup(user_input[1], user_input[2], session, sout);
+                    int user_id = database.signup(user_input[1], user_input[2], sout);
                     if (user_id != -1) {
                         session = user_id;
                     }
@@ -292,12 +301,12 @@ class ProcessConnection extends Thread{
                     database.displayAccounts(session, sout);
                 } else if (user_input[0].equals("DEPOSIT")) {
                     int account_id = Integer.parseInt(user_input[1]);
-                    double balance = Double.parseDouble(user_input[2]);
-                    database.deposit(account_id, balance, session, sout);
+                    double amount = Double.parseDouble(user_input[2]);
+                    database.deposit(account_id, amount, session, sout);
                 } else if (user_input[0].equals("WITHDRAW")) {
                     int account_id = Integer.parseInt(user_input[1]);
-                    double balance = Double.parseDouble(user_input[2]);
-                    database.withdraw(account_id, balance, session, sout);
+                    double amount = Double.parseDouble(user_input[2]);
+                    database.withdraw(account_id, amount, session, sout);
                 } else if (user_input[0].equals("SEND")) {
                     int sender_account_id = Integer.parseInt(user_input[1]);
                     int receiver_id = Integer.parseInt(user_input[2]);
@@ -314,5 +323,7 @@ class ProcessConnection extends Thread{
             System.out.println("Error in ProcessConnection: " + ex.toString());
         }
     }
-
 }
+
+
+
