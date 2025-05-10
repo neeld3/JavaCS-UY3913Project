@@ -5,7 +5,6 @@ import java.sql.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class Server {
-    public static ArrayList<Socket> clients = new ArrayList<Socket>();
     public static Database shared_database;  
     public static void main(String[] args) {
         try {
@@ -14,7 +13,6 @@ public class Server {
             
             while(true){
                 Socket socket = server.accept(); 
-                clients.add(socket);
                 new ProcessConnection(socket, shared_database).start();
             }
         } catch (IOException | SQLException ex) {
@@ -31,6 +29,7 @@ class Database {
         conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/bank", "root", "");
     }
 
+    // Handling loggin in
     public int login(String username, String password, PrintStream out) throws SQLException {
         PreparedStatement query = conn.prepareStatement("SELECT user_id, password FROM user WHERE username = ?");
         query.setString(1, username);
@@ -38,7 +37,8 @@ class Database {
 
         if (result.next()) {
             String stored_pass = result.getString("password");
-             if (BCrypt.checkpw(password, stored_pass) ) {
+          
+            if (BCrypt.checkpw(password, stored_pass) ) {
                 int session = result.getInt("user_id");
                 out.println("SUCCESS");
                 return session;
@@ -52,6 +52,7 @@ class Database {
         }
     }
 
+    // Handling registering new user
     public int signup(String username, String password, PrintStream out) throws SQLException {
         username = username.toLowerCase();
         PreparedStatement check = conn.prepareStatement("SELECT * FROM User WHERE username = ?");
@@ -70,6 +71,7 @@ class Database {
         return login(username, password, out);
     }
 
+    // Displaying all the accounts 
     public void displayAccounts(int session, PrintStream out) throws SQLException {
         PreparedStatement query = conn.prepareStatement("{CALL get_accounts(?)}");
         query.setInt(1, session);
@@ -84,7 +86,6 @@ class Database {
             } else {
                 out.println("ACCOUNT " + account_id + " " + balance);
             }
-
         }
         out.println("END");
     }
@@ -286,7 +287,7 @@ class ProcessConnection extends Thread{
             while (sin.hasNextLine()) {
                 String input = sin.nextLine();
                 String[] user_input = input.split(" ");
-
+              
                 if (user_input[0].equals("LOGIN")) {
                     int user_id = database.login(user_input[1], user_input[2], sout);
                     if (user_id != -1) {
